@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Sensor IoT</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .control-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        #fetchButton {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        #fetchButton:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        #fetchButton:active {
+            transform: translateY(0);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .data-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover {
+            background-color: #f8f9ff;
+        }
+
+        .json-container {
+            background: #2d3748;
+            color: #68d391;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-size: 1.2rem;
+            padding: 40px;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌡️ Dashboard Sensor IoT</h1>
+            <p class="subtitle">Monitoring Suhu, Kelembapan & Kecerahan Real-time</p>
+        </header>
+
+        <div class="control-panel">
+            <button id="fetchButton">📊 Ambil Data Sensor</button>
+        </div>
+
+        <div class="stats-grid" id="statsGrid" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-label">Suhu Maksimal</div>
+                <div class="stat-value" id="suhuMax">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">❄️</div>
+                <div class="stat-label">Suhu Minimal</div>
+                <div class="stat-value" id="suhuMin">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-label">Suhu Rata-rata</div>
+                <div class="stat-value" id="suhuRata">-</div>
+            </div>
+        </div>
+
+        <div class="data-section" id="tableSection" style="display: none;">
+            <h3 class="section-title">📋 Data Saat Suhu & Kelembapan Maksimal</h3>
+            <div id="tableContainer"></div>
+        </div>
+
+        <div class="data-section">
+            <h3 class="section-title">💻 Data Mentah JSON</h3>
+            <div class="json-container" id="jsonOutput">Tekan tombol "Ambil Data Sensor" untuk memulai...</div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('fetchButton').addEventListener('click', fetchData);
+
+        async function fetchData() {
+            const jsonOutput = document.getElementById('jsonOutput');
+            const statsGrid = document.getElementById('statsGrid');
+            const tableSection = document.getElementById('tableSection');
+            
+            jsonOutput.innerHTML = '<div class="loading">⏳ Mengambil data dari server...</div>';
+            statsGrid.style.display = 'none';
+            tableSection.style.display = 'none';
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/sensor-stats');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+
+                // Tampilkan data mentah
+                jsonOutput.textContent = JSON.stringify(data, null, 2);
+
+                // Update statistik cards
+                document.getElementById('suhuMax').textContent = `${data.suhumax}°C`;
+                document.getElementById('suhuMin').textContent = `${data.suhumin}°C`;
+                document.getElementById('suhuRata').textContent = `${data.suhurata}°C`;
+                statsGrid.style.display = 'grid';
+
+                // Buat tabel
+                const tableContainer = document.getElementById('tableContainer');
+                let tableHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>🌡️ Suhu</th>
+                                <th>💧 Humid</th>
+                                <th>☀️ Kecerahan</th>
+                                <th>🕐 Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                data.nilai_suhu_max_humid_max.forEach(item => {
+                    tableHTML += `
+                        <tr>
+                            <td>${item.id}</td>
+                            <td>${item.suhun}°C</td>
+                            <td>${item.humid}%</td>
+                            <td>${item.kecerahan} lux</td>
+                            <td>${item.timestamp}</td>
+                        </tr>
+                    `;
+                });
+                
+                tableHTML += '</tbody></table>';
+                tableContainer.innerHTML = tableHTML;
+                tableSection.style.display = 'block';
+
+            } catch (error) {
+                jsonOutput.innerHTML = `<div class="error">❌ Gagal mengambil data: ${error.message}<br><br>Pastikan backend Flask berjalan di http://127.0.0.1:5000</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
